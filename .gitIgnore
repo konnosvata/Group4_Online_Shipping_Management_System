@@ -1,2 +1,5 @@
 #ignore virtual environment
 .env
+
+#ignore vs studio settings
+.DS_Store
