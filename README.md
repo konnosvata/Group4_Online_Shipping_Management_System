@@ -6,6 +6,9 @@
    
 2. ![Alt text](/images/nodesetting.png?raw=true "Enable this setting")
 
+3. install SQLite, https://www.sqlite.org/download.html and add the path in the system's environment variables
+
+
 ## Backend
 Requires python 3
 
