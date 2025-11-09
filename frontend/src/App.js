@@ -1,10 +1,12 @@
+import React from "react";
+import AuthLayout from "./authLayout";
 import Login from "./login";
 
 function App() {
   return (
-    <div>
+    <AuthLayout title="Welcome Back">
       <Login />
-    </div>
+    </AuthLayout>
   );
 }
 
