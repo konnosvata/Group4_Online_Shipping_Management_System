@@ -60,7 +60,9 @@ function Login() {
           </label>
         </div>
 
-        <button type="submit">Login</button>
+        <button type="submit" style={{ borderRadius: "10px", padding: "10px 20px" }}>
+            Login
+        </button>
       </form>
 
       {error && <p style={{ color: "red" }}>{error}</p>}

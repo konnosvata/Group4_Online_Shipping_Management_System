@@ -4,7 +4,7 @@ import Login from "./login";
 
 function App() {
   return (
-    <AuthLayout title="Welcome Back">
+    <AuthLayout>
       <Login />
     </AuthLayout>
   );

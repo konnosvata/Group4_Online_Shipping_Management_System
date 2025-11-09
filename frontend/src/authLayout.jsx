@@ -2,7 +2,7 @@ import React from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
-const AuthLayout = ({ children, title }) => {
+const AuthLayout = ({ children}) => {
   return (
     <div className="vh-100 position-relative">
       <div className="d-flex h-100">
