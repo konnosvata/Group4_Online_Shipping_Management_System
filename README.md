@@ -22,13 +22,13 @@ Create a virtual environment for python so dependencies do not install globably
 ```
 python -m venv venv
 source venv/Scripts/activate (you should see (venv) in you terminal path)
-```
+
 cd backend
 pip install -r requirements.txt
 python app.py
 ```
 
-## Fronted
+## Frontend
 
 Requires node
 
