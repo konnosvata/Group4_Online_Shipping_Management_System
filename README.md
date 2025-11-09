@@ -1,16 +1,46 @@
 # Online_Shipping_Management_System
-prerequisites:
-    install node js, https://nodejs.org/en/download
-    ![Alt text](/images/nodesetting.png?raw=true "Enable this setting")
 
-    install flask by typping  "pip install flask flask-cors" in the cmd
+## Prerequisites:
 
-how to run the server:
-    # localhost:5000
-    cd backend
-    python app.py
+1. install node js, https://nodejs.org/en/download
+   
+2. ![Alt text](/images/nodesetting.png?raw=true "Enable this setting")
 
-    # localhost:3000
-    cd frontend
-    npm start
+## Backend
+Requires python 3
+
+Server runs on:
+
+```
+localhost:5000
+```
+### For inital run executed following commands
+
+#### Optiona step
+Create a virtual environment for python so dependencies do not install globably
+
+```
+python -m venv venv
+source venv/Scripts/activate (you should see (venv) in you terminal path)
+```
+cd backend
+pip install -r requirements.txt
+python app.py
+```
+
+## Fronted
+
+Requires node
+
+Server runs on 
+```
+localhost:3000
+```
+### For inital run executed following commands
+```
+cd fronted
+npm install
+npm start
+```
+
     
