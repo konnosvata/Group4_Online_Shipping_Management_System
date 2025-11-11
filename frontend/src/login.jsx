@@ -64,9 +64,17 @@ function Login() {
             Login
         </button>
       </form>
+      
 
       {error && <p style={{ color: "red" }}>{error}</p>}
       {success && <p style={{ color: "green" }}>{success}</p>}
+
+      <div>
+        <button type="submit" style={{ borderRadius: "10px", padding: "10px 20px" }}>
+            register
+        </button>
+        
+      </div>
     </div>
   );
 }
