@@ -60,6 +60,50 @@ def login():
     except Exception as e:
         app.logger.exception("Error in /api/login")
         return jsonify({"error": "Internal server error"}), 500
+    
+# registration backend
+@app.post("/api/register")
+def register():
+    try:
+        data = request.get_json()
+        name = data.get("name")
+        email = data.get("email")
+        password = data.get("password")
+
+        if not name or not email or not password:
+            return jsonify({"error": "Name, email, and password are required"}), 400
+
+        db = get_db()
+
+        existing_user = db.execute(
+            "SELECT * FROM users WHERE email = ?", (email,)
+        ).fetchone()
+
+        if existing_user:
+            return jsonify({"error": "Email already registered"}), 400
+
+        # Insert new user with default role
+        db.execute(
+            "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
+            (name, email, password, "customer")
+        )
+        db.commit()
+
+        user = db.execute(
+            "SELECT * FROM users WHERE email = ?", (email,)
+        ).fetchone()
+
+        return jsonify({
+            "message": "Registration successful",
+            "user": {
+                "id": user["user_id"],
+                "name": user["name"],
+            }
+        }), 201
+
+    except Exception as e:
+        app.logger.exception("Error in /api/register")
+        return jsonify({"error": "Internal server error"}), 500
 
 #use port 5000
 if __name__ == "__main__":

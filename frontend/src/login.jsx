@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,8 +72,10 @@ function Login() {
       {success && <p style={{ color: "green" }}>{success}</p>}
 
       <div>
-        <button type="submit" style={{ borderRadius: "10px", padding: "10px 20px" }}>
-            register
+        <button type="button" 
+        onClick={() => navigate("/registration")}
+        style={{ borderRadius: "10px", padding: "10px 20px" }}>
+            Go to Register
         </button>
         
       </div>
