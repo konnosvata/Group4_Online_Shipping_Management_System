@@ -1,11 +1,13 @@
+import os
+import sqlite3
 from flask import Flask, jsonify, request, g
 from flask_cors import CORS
-import sqlite3
 
-DATABASE = "Database.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE = os.path.join(BASE_DIR, "..", "Database.db")
 
 app = Flask(__name__)
-CORS(app)  # Allow requests from React frontend
+CORS(app)
 
 #connect with database
 def get_db():
