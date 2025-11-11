@@ -71,7 +71,7 @@ function Login() {
       {error && <p style={{ color: "red" }}>{error}</p>}
       {success && <p style={{ color: "green" }}>{success}</p>}
 
-      <div>
+      <div style={{ marginTop: "1rem" }}>
         <button type="button" 
         onClick={() => navigate("/registration")}
         style={{ borderRadius: "10px", padding: "10px 20px" }}>
