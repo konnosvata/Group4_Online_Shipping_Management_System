@@ -17,15 +17,16 @@ Server runs on:
 ```
 localhost:5000
 ```
-### For inital run execute the following commands
 
-#### Optional step
+### Optional step
 Create a virtual environment for python so dependencies do not install globably
 
 ```
 python -m venv venv
 venv\Scripts\activate (you should see (venv) in you terminal path)
 ```
+
+### For inital run execute the following commands
 ```
 cd backend
 pip install -r requirements.txt
