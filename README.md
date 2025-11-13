@@ -2,7 +2,7 @@
 
 ## Prerequisites:
 
-1. Install node js, https://nodejs.org/en/download
+1. Install node js version 24.11, https://nodejs.org/en/download
    
 2. Make sure you tick this box ![Alt text](/images/nodesetting.png?raw=true "Enable this setting")
 
