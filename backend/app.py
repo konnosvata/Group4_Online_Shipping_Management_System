@@ -84,8 +84,8 @@ def register():
 
         # Insert new user with default role
         db.execute(
-            "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
-            (name, email, password, "customer")
+            "INSERT INTO users (name, email, password, role_id) VALUES (?, ?, ?, ?)",
+            (name, email, password, 1)
         )
         db.commit()
 
