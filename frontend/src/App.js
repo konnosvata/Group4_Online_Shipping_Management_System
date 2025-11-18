@@ -4,6 +4,7 @@ import AuthLayout from "./authLayout";
 import Login from "./login";
 import Registration from "./registration";
 import Forget from "./forget";
+import ResetPassword from "./resetPassword";
 
 function App() {
   return (
@@ -33,7 +34,18 @@ function App() {
             </AuthLayout>
           }
         />
+
+        <Route
+          path="/resetPassword"
+          element={
+            <AuthLayout>
+              <ResetPassword />
+            </AuthLayout>
+          }
+        />
       </Routes>
+
+      
     </BrowserRouter>
   );
 }

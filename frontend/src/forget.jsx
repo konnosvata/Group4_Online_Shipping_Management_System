@@ -26,7 +26,7 @@ function Forget() {
         return;
       }
 
-      setSuccess(`email send`);
+      setSuccess(data.message);
     } catch (err) {
       //setError("Network error, please try again.");
       setError(err.message)
