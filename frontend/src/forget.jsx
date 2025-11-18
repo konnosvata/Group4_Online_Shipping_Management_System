@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-function Login() {
+function Forget() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
@@ -14,20 +13,20 @@ function Login() {
     setSuccess("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/login", {
+      const res = await fetch("http://localhost:5000/api/forget", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Login failed");
+        setError(data.error || "Something went wrong");
         return;
       }
 
-      setSuccess(`Logged in as ${data.user.name}`);
+      setSuccess(`email send`);
     } catch (err) {
       //setError("Network error, please try again.");
       setError(err.message)
@@ -36,7 +35,7 @@ function Login() {
 
   return (
     <div style={{ maxWidth: 300, margin: "2rem auto" }}>
-      <h2>Login</h2>
+      <h2>Forget Password</h2>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: "1rem" }}>
           <label>
@@ -50,20 +49,8 @@ function Login() {
           </label>
         </div>
 
-        <div style={{ marginBottom: "1rem" }}>
-          <label>
-            Password<br />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </label>
-        </div>
-
         <button type="submit" style={{ borderRadius: "10px", padding: "10px 20px" }}>
-            Login
+            reset password
         </button>
       </form>
       
@@ -73,24 +60,15 @@ function Login() {
 
       <div style={{ marginTop: "1rem" }}>
         <button type="button" 
-        onClick={() => navigate("/registration")}
+        onClick={() => navigate("/")}
         style={{ borderRadius: "10px", padding: "10px 20px" }}>
-            Go to Register
+            Go to Login
         </button>
-        
       </div>
 
-      <div style={{ marginTop: "1rem" }}>
-        <button type="button" 
-        onClick={() => navigate("/forget")}
-        style={{ borderRadius: "10px", padding: "10px 20px" }}>
-            Go to Forget Password
-        </button>
-        
-      </div>
-      
+
     </div>
   );
 }
 
-export default Login;
+export default Forget;

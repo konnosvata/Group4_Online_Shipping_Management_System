@@ -2,7 +2,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AuthLayout from "./authLayout";
 import Login from "./login";
-import Registration from "./registration"; 
+import Registration from "./registration";
+import Forget from "./forget";
 
 function App() {
   return (
@@ -21,6 +22,14 @@ function App() {
           element={
             <AuthLayout>
               <Registration />
+            </AuthLayout>
+          }
+        />
+        <Route
+          path="/forget"
+          element={
+            <AuthLayout>
+              <Forget />
             </AuthLayout>
           }
         />

@@ -4,3 +4,6 @@ venv/
 
 #ignore vs studio settings
 .DS_Store
+
+#python cache
+__pychache__/
