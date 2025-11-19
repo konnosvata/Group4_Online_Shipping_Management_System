@@ -18,7 +18,7 @@ const CustomerLayout = () => {
         <nav style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <SidebarLink to="/customer/dashboard" label="Dashboard" />
           <SidebarLink to="/customer/create-shipment" label="Create Shipment" />
-          <SidebarLink to="/customer/my-shipments" label="My Shipments" />
+          <SidebarLink to="activeShipments" label="My Shipments" />
           <SidebarLink to="/customer/schedule-pickup" label="Schedule Pickup" />
           <SidebarLink to="/customer/tracking" label="Tracking" />
           <SidebarLink to="/customer/payments" label="Payments" />

@@ -15,7 +15,7 @@ import Tracking from "./pages_customer/Tracking";
 import Payments from "./pages_customer/Payments";
 import ChatWithCourier from "./pages_customer/ChatWithCourier";
 import AccountSettings from "./pages_customer/AccountSettings";
-import ShipmentsPage from "./activeShipments";
+import ActiveShipments from "./pages_customer/activeShipments";
 
 function App() {
   return (
@@ -67,7 +67,7 @@ function App() {
 
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="create-shipment" element={<CreateShipment />} />
-          <Route path="active-shipments" element={<ShipmentsPage />} />
+          <Route path="activeShipments" element={<ActiveShipments />} />
           <Route path="schedule-pickup" element={<SchedulePickup />} />
           <Route path="tracking" element={<Tracking />} />
           <Route path="payments" element={<Payments />} />
