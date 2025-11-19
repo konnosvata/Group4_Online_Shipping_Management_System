@@ -27,12 +27,14 @@ function Login() {
         return;
       }
 
+      // success message from backend
+      setSuccess(`Logged in as ${data.user.name}. Redirecting...`);
       setSuccess(`Logged in as ${data.user.name}`);
       localStorage.setItem("user", JSON.stringify(data.user));
-      navigate("/customerHomePage");
+      navigate("/customer/dashboard");
+
     } catch (err) {
-      //setError("Network error, please try again.");
-      setError(err.message)
+      setError(err.message);
     }
   };
 
@@ -74,21 +76,23 @@ function Login() {
       {success && <p style={{ color: "green" }}>{success}</p>}
 
       <div style={{ marginTop: "1rem" }}>
-        <button type="button" 
-        onClick={() => navigate("/registration")}
-        style={{ borderRadius: "10px", padding: "10px 20px" }}>
-            Go to Register
+        <button 
+          type="button"
+          onClick={() => navigate("/registration")}
+          style={{ borderRadius: "10px", padding: "10px 20px" }}
+        >
+          Go to Register
         </button>
-        
       </div>
 
       <div style={{ marginTop: "1rem" }}>
-        <button type="button" 
-        onClick={() => navigate("/forget")}
-        style={{ borderRadius: "10px", padding: "10px 20px" }}>
-            Go to Forget Password
+        <button 
+          type="button"
+          onClick={() => navigate("/forget")}
+          style={{ borderRadius: "10px", padding: "10px 20px" }}
+        >
+          Go to Forget Password
         </button>
-        
       </div>
       
     </div>
