@@ -29,11 +29,9 @@ function Login() {
 
       // success message from backend
       setSuccess(`Logged in as ${data.user.name}. Redirecting...`);
-
-      // 🟢 redirect to dashboard after 5 seconds
-      setTimeout(() => {
-        navigate("/customer/dashboard");
-      }, 5000);
+      setSuccess(`Logged in as ${data.user.name}`);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      navigate("/customer/dashboard");
 
     } catch (err) {
       setError(err.message);

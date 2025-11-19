@@ -211,6 +211,33 @@ def resetPassword():
     except Exception as e:
         app.logger.exception("Error in /api/resetPassword")
         return jsonify({"error": "Internal server error"}), 500
+
+@app.get("/api/activeShipments")
+def get_active_shipments():
+    try:
+        user_id = request.args.get("user_id")
+
+        if not user_id:
+            return jsonify({"error": "user_id is required"}), 400
+
+        db = get_db()
+        rows = db.execute(
+            """
+            SELECT * FROM shipments 
+            WHERE created_by = ? AND (status = 'active' OR status = 'pending')
+            """,
+            (user_id,)
+        ).fetchall()
+
+        shipments = [dict(row) for row in rows]
+
+        return jsonify(shipments), 200
+
+    except Exception as e:
+        app.logger.exception("Error in /api/activeShipments")
+        return jsonify({"error": "Internal server error"}), 500
+    
+
     
 
 #use port 5000

@@ -6,48 +6,52 @@ import Registration from "./registration";
 import Forget from "./forget";
 import ResetPassword from "./resetPassword";
 
-// 🔵 NEW IMPORTS for customer area
+// Customer area
 import CustomerLayout from "./layout/CustomerLayout";
 import Dashboard from "./pages_customer/Dashboard";
 import CreateShipment from "./pages_customer/CreateShipment";
-import MyShipments from "./pages_customer/MyShipments";
 import SchedulePickup from "./pages_customer/SchedulePickup";
 import Tracking from "./pages_customer/Tracking";
 import Payments from "./pages_customer/Payments";
 import ChatWithCourier from "./pages_customer/ChatWithCourier";
 import AccountSettings from "./pages_customer/AccountSettings";
+import ShipmentsPage from "./activeShipments";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* your existing auth routes */}
+
+        {/* AUTH ROUTES */}
         <Route
-          path="/"
+          index
           element={
             <AuthLayout>
               <Login />
             </AuthLayout>
           }
         />
+
         <Route
-          path="/registration"
+          path="registration"
           element={
             <AuthLayout>
               <Registration />
             </AuthLayout>
           }
         />
+
         <Route
-          path="/forget"
+          path="forget"
           element={
             <AuthLayout>
               <Forget />
             </AuthLayout>
           }
         />
+
         <Route
-          path="/resetPassword"
+          path="resetPassword"
           element={
             <AuthLayout>
               <ResetPassword />
@@ -55,17 +59,23 @@ function App() {
           }
         />
 
-        {/* 🔵 NEW: customer area with sidebar + nested pages */}
-        <Route path="/customer" element={<CustomerLayout />}>
+        {/* CUSTOMER ROUTES */}
+        <Route path="customer" element={<CustomerLayout />}>
+
+          {/* default page when visiting /customer */}
+          <Route index element={<Dashboard />} />
+
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="create-shipment" element={<CreateShipment />} />
-          <Route path="my-shipments" element={<MyShipments />} />
+          <Route path="active-shipments" element={<ShipmentsPage />} />
           <Route path="schedule-pickup" element={<SchedulePickup />} />
           <Route path="tracking" element={<Tracking />} />
           <Route path="payments" element={<Payments />} />
           <Route path="chat" element={<ChatWithCourier />} />
           <Route path="settings" element={<AccountSettings />} />
+
         </Route>
+
       </Routes>
     </BrowserRouter>
   );
