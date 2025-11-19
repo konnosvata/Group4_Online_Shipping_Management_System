@@ -211,7 +211,7 @@ def resetPassword():
     except Exception as e:
         app.logger.exception("Error in /api/resetPassword")
         return jsonify({"error": "Internal server error"}), 500
-'''  
+
 @app.get("/api/activeShipments")
 def get_active_shipments():
     try:
@@ -236,18 +236,8 @@ def get_active_shipments():
     except Exception as e:
         app.logger.exception("Error in /api/activeShipments")
         return jsonify({"error": "Internal server error"}), 500
-    '''
-@app.get("/api/testShipments")
-def test_shipments():
-    try:
-        db = get_db()
-        rows = db.execute("SELECT * FROM shipments").fetchall()
-        shipments = [dict(row) for row in rows]
-        return jsonify(shipments), 200
-    except Exception as e:
-        app.logger.exception("Error in /api/testShipments")
-        return jsonify({"error": "Internal server error"}), 500
     
+
     
 
 #use port 5000
