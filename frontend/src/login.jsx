@@ -28,6 +28,8 @@ function Login() {
       }
 
       setSuccess(`Logged in as ${data.user.name}`);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      navigate("/customerHomePage");
     } catch (err) {
       //setError("Network error, please try again.");
       setError(err.message)

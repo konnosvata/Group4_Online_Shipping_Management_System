@@ -5,6 +5,8 @@ import Login from "./login";
 import Registration from "./registration";
 import Forget from "./forget";
 import ResetPassword from "./resetPassword";
+import CustomerHomePage from "./customerHomePage";
+import ShipmentsPage from "./activeShipments"; 
 
 function App() {
   return (
@@ -34,7 +36,6 @@ function App() {
             </AuthLayout>
           }
         />
-
         <Route
           path="/resetPassword"
           element={
@@ -43,9 +44,10 @@ function App() {
             </AuthLayout>
           }
         />
-      </Routes>
+        <Route path="/customerHomePage" element={<CustomerHomePage />} />
 
-      
+        <Route path="/activeShipments" element={<ShipmentsPage />} />
+      </Routes>
     </BrowserRouter>
   );
 }
