@@ -5,49 +5,55 @@ function ShipmentsPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchShipments = async () => {
-      try {
-        const user = JSON.parse(localStorage.getItem("user"));
+  // NEW: controls whether showing full history or active-only
+  const [showHistory, setShowHistory] = useState(false);
 
-        if (!user) {
-          setError("No user logged in.");
-          setLoading(false);
-          return;
-        }
+  const fetchShipments = async (historyMode) => {
+    try {
+      setLoading(true);
+      const user = JSON.parse(localStorage.getItem("user"));
 
-        const res = await fetch(
-          `http://localhost:5000/api/activeShipments?user_id=${user.id}`
-        );
-
-        const contentType = res.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          const text = await res.text();
-          throw new Error("Server did not return JSON: " + text);
-        }
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to load shipments");
-        }
-
-        setShipments(data);
-      } catch (err) {
-        setError("Error: " + err.message);
-      } finally {
+      if (!user) {
+        setError("No user logged in.");
         setLoading(false);
+        return;
       }
-    };
 
-    fetchShipments();
-  }, []);
+      const endpoint = historyMode
+        ? `http://localhost:5000/api/allShipments?user_id=${user.id}`
+        : `http://localhost:5000/api/activeShipments?user_id=${user.id}`;
 
+      const res = await fetch(endpoint);
+
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        throw new Error("Server did not return JSON: " + text);
+      }
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to load shipments");
+      }
+
+      setShipments(data);
+    } catch (err) {
+      setError("Error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchShipments(showHistory);
+  }, [showHistory]);
+
+  // Cancel shipment only available in active-mode
   const cancelShipment = async (shipment_id) => {
     const confirmCancel = window.confirm(
       "Are you sure you want to cancel this shipment?"
     );
-
     if (!confirmCancel) return;
 
     try {
@@ -64,12 +70,11 @@ function ShipmentsPage() {
         return;
       }
 
-      // Remove cancelled shipment from UI
       setShipments((prev) =>
         prev.filter((ship) => ship.shipment_id !== shipment_id)
       );
 
-      alert("Shipment cancelled successfully.");
+      alert("Shipment cancelled.");
     } catch (err) {
       alert("Error: " + err.message);
     }
@@ -79,12 +84,30 @@ function ShipmentsPage() {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h2>Your Active Shipments</h2>
+      <h2>
+        {showHistory ? "Full Shipment History" : "Your Active Shipments"}
+      </h2>
+
+      {/* Toggle View Button */}
+      <button
+        style={{
+          marginBottom: "20px",
+          padding: "10px 15px",
+          background: "#007bff",
+          color: "white",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
+        onClick={() => setShowHistory((prev) => !prev)}
+      >
+        {showHistory ? "Show Active Shipments" : "Show Full History"}
+      </button>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {shipments.length === 0 ? (
-        <p>No active or pending shipments found.</p>
+        <p>No shipments found.</p>
       ) : (
         shipments.map((ship) => (
           <div
@@ -123,21 +146,23 @@ function ShipmentsPage() {
               <strong>Fragile:</strong> {ship.fragile ? "Yes" : "No"}
             </p>
 
-            {/* Cancel Button */}
-            <button
-              style={{
-                marginTop: "10px",
-                padding: "8px 12px",
-                background: "red",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
-              onClick={() => cancelShipment(ship.shipment_id)}
-            >
-              Cancel Shipment
-            </button>
+            {/* Cancel button ONLY in Active mode */}
+            {!showHistory && (
+              <button
+                style={{
+                  marginTop: "10px",
+                  padding: "8px 12px",
+                  background: "red",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                }}
+                onClick={() => cancelShipment(ship.shipment_id)}
+              >
+                Cancel Shipment
+              </button>
+            )}
           </div>
         ))
       )}

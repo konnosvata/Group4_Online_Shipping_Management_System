@@ -350,6 +350,32 @@ def cancel_shipment():
     except Exception as e:
         app.logger.exception("Error cancelling shipment")
         return jsonify({"error": "Internal server error"}), 500
+    
+
+@app.get("/api/allShipments")
+def get_all_shipments():
+    try:
+        user_id = request.args.get("user_id")
+        if not user_id:
+            return jsonify({"error": "user_id is required"}), 400
+
+        db = get_db()
+        rows = db.execute(
+            """
+            SELECT * FROM shipments 
+            WHERE created_by = ?
+            ORDER BY date_created DESC
+            """,
+            (user_id,)
+        ).fetchall()
+
+        shipments = [dict(row) for row in rows]
+        return jsonify(shipments), 200
+
+    except Exception as e:
+        app.logger.exception("Error in /api/allShipments")
+        return jsonify({"error": "Internal server error"}), 500
+
 
  
 
