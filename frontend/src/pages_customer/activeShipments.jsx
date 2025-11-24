@@ -8,7 +8,6 @@ function ShipmentsPage() {
   useEffect(() => {
     const fetchShipments = async () => {
       try {
-        // Load logged-in user
         const user = JSON.parse(localStorage.getItem("user"));
 
         if (!user) {
@@ -17,7 +16,6 @@ function ShipmentsPage() {
           return;
         }
 
-        // Call backend for only *this user's* shipments
         const res = await fetch(
           `http://localhost:5000/api/activeShipments?user_id=${user.id}`
         );
@@ -45,6 +43,38 @@ function ShipmentsPage() {
     fetchShipments();
   }, []);
 
+  const cancelShipment = async (shipment_id) => {
+    const confirmCancel = window.confirm(
+      "Are you sure you want to cancel this shipment?"
+    );
+
+    if (!confirmCancel) return;
+
+    try {
+      const res = await fetch("http://localhost:5000/api/cancelShipment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shipment_id }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Failed to cancel shipment");
+        return;
+      }
+
+      // Remove cancelled shipment from UI
+      setShipments((prev) =>
+        prev.filter((ship) => ship.shipment_id !== shipment_id)
+      );
+
+      alert("Shipment cancelled successfully.");
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
+
   if (loading) return <p>Loading shipments...</p>;
 
   return (
@@ -61,20 +91,53 @@ function ShipmentsPage() {
             key={ship.shipment_id}
             style={{
               border: "1px solid #ccc",
-              padding: "10px",
-              marginBottom: "10px",
+              padding: "15px",
+              marginBottom: "15px",
               borderRadius: "8px",
-              background: "#f9f9f9"
+              background: "#f9f9f9",
             }}
           >
-            <p><strong>ID:</strong> {ship.shipment_id}</p>
-            <p><strong>Status:</strong> {ship.status}</p>
-            <p><strong>Destination:</strong> {ship.destination}</p>
-            <p><strong>Date Created:</strong> {ship.date_created}</p>
-            <p><strong>Date to Deliver:</strong> {ship.date_to_deliver}</p>
-            <p><strong>Weight:</strong> {ship.weight} kg</p>
-            <p><strong>Dimensions:</strong> {ship.length} × {ship.width} × {ship.height}</p>
-            <p><strong>Fragile:</strong> {ship.fragile ? "Yes" : "No"}</p>
+            <p>
+              <strong>ID:</strong> {ship.shipment_id}
+            </p>
+            <p>
+              <strong>Status:</strong> {ship.status}
+            </p>
+            <p>
+              <strong>Destination:</strong> {ship.destination}
+            </p>
+            <p>
+              <strong>Date Created:</strong> {ship.date_created}
+            </p>
+            <p>
+              <strong>Date to Deliver:</strong> {ship.date_to_deliver}
+            </p>
+            <p>
+              <strong>Weight:</strong> {ship.weight} kg
+            </p>
+            <p>
+              <strong>Dimensions:</strong> {ship.length} × {ship.width} ×{" "}
+              {ship.height}
+            </p>
+            <p>
+              <strong>Fragile:</strong> {ship.fragile ? "Yes" : "No"}
+            </p>
+
+            {/* Cancel Button */}
+            <button
+              style={{
+                marginTop: "10px",
+                padding: "8px 12px",
+                background: "red",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+              onClick={() => cancelShipment(ship.shipment_id)}
+            >
+              Cancel Shipment
+            </button>
           </div>
         ))
       )}

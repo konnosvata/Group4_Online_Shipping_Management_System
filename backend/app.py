@@ -318,6 +318,40 @@ def get_active_shipments():
         app.logger.exception("Error in /api/activeShipments")
         return jsonify({"error": "Internal server error"}), 500
     
+@app.post("/api/cancelShipment")
+def cancel_shipment():
+    try:
+        data = request.get_json()
+        shipment_id = data.get("shipment_id")
+
+        if not shipment_id:
+            return jsonify({"error": "shipment_id required"}), 400
+
+        db = get_db()
+
+        # Check shipment exists
+        shipment = db.execute(
+            "SELECT * FROM shipments WHERE shipment_id = ?", 
+            (shipment_id,)
+        ).fetchone()
+
+        if not shipment:
+            return jsonify({"error": "Shipment not found"}), 404
+
+        # Update status to cancelled
+        db.execute(
+            "UPDATE shipments SET status = 'cancelled' WHERE shipment_id = ?",
+            (shipment_id,)
+        )
+        db.commit()
+
+        return jsonify({"message": "Shipment cancelled"}), 200
+
+    except Exception as e:
+        app.logger.exception("Error cancelling shipment")
+        return jsonify({"error": "Internal server error"}), 500
+
+ 
 
 #use port 5000
 if __name__ == "__main__":
