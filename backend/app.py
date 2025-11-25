@@ -502,6 +502,58 @@ def cancel_shipment():
         app.logger.exception("Error in /api/cancelShipment")
         return jsonify({"error": str(e)}), 500
 
+@app.route("/api/getUser", methods=["GET"])
+def get_user():
+    try:
+        user_id = request.args.get("user_id")
+        if not user_id:
+            return jsonify({"error": "Missing user_id"}), 400
+
+        cur = get_db().cursor()
+        cur.execute("""
+            SELECT user_id, name, email, password
+            FROM users
+            WHERE user_id = ?
+        """, (user_id,))
+        row = cur.fetchone()
+
+        if not row:
+            return jsonify({"error": "User not found"}), 404
+
+        return jsonify(dict(row))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/updateUser", methods=["POST"])
+def update_user():
+    try:
+        data = request.get_json()
+        name = data.get("name", "").strip()
+        email = data.get("email", "").strip()
+        password = data.get("password", "").strip()
+        user_id = data.get("user_id")
+
+        if not name or not email or not password or not user_id:
+            return jsonify({"error": "All fields are required"}), 400
+
+        if "@" not in email or email.endswith("@"):
+            return jsonify({"error": "Invalid email"}), 400
+
+        cur = get_db().cursor()
+        cur.execute("""
+            UPDATE users
+            SET name = ?, email = ?, password = ?
+            WHERE user_id = ?
+        """, (name, email, password, user_id))
+
+        get_db().commit()
+        return jsonify({"message": "User updated successfully"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
 #use port 8000 for backend (port 5000 is reserved by Replit for frontend webview)
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
