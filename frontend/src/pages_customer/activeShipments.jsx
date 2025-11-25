@@ -165,7 +165,12 @@ function ShipmentsPage() {
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {shipments.length === 0 ? (
-        <p>No active or pending shipments found.</p>
+        <p>
+      {showHistory
+      ? "No shipment history found."
+      : "No active or pending shipments found."
+      }
+  </p>
       ) : (
         shipments.map((ship) => (
           <div key={ship.shipment_id}>
