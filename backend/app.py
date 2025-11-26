@@ -4,7 +4,7 @@ from flask import Flask, jsonify, request, g
 from flask_cors import CORS
 import uuid
 import requests
-
+import yagmail
 
 
 ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjVhMjg1ZWQzMTZhMDQzYjg5NTlhZTMwNzZhMTM2N2ZkIiwiaCI6Im11cm11cjY0In0="
@@ -146,17 +146,16 @@ def forget():
         )
         db.commit()
 
-        #send email
-        url = f"http://localhost:3000/resetPassword?token={token}"
 
-        #remove later
-        return jsonify({
-            "message": url,
-        }), 201
+        #send email
+        yag = yagmail.SMTP('group4shipping@gmail.com', 'opmh ljmd gvmi gctx')
+        contents = [f'Please reset your password by pressing this link, http://localhost:3000/resetPassword?token={token} ']
+        yag.send(email, 'password reset', contents)
+
     
-        # return jsonify({
-        #     "message": "email send",
-        # }), 201
+        return jsonify({
+            "message": "email send",
+        }), 201
 
     except Exception as e:
         app.logger.exception("Error in /api/forget")
