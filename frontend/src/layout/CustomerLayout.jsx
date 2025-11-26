@@ -22,7 +22,7 @@ const CustomerLayout = () => {
           <SidebarLink to="/customer/schedule-pickup" label="Schedule Pickup" />
           <SidebarLink to="/customer/tracking" label="Tracking" />
           <SidebarLink to="/customer/payments" label="Payments" />
-          <SidebarLink to="/customer/chat" label="Chat with Courier" />
+          <SidebarLink to="/customer/chat" label="Communication" />
           <SidebarLink to="/customer/settings" label="Account Settings" />
         </nav>
       </aside>

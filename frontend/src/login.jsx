@@ -9,34 +9,41 @@ function Login() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
+  e.preventDefault();
+  setError("");
+  setSuccess("");
 
-    try {
-      const res = await fetch("http://localhost:5000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+  try {
+    const res = await fetch("http://localhost:5000/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || "Login failed");
-        return;
-      }
-
-      // success message from backend
-      setSuccess(`Logged in as ${data.user.name}. Redirecting...`);
-      setSuccess(`Logged in as ${data.user.name}`);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      navigate("/customer/dashboard");
-
-    } catch (err) {
-      setError(err.message);
+    if (!res.ok) {
+      setError(data.error || "Login failed");
+      return;
     }
-  };
+
+    // success message from backend
+    setSuccess(`Logged in as ${data.user.name}`);
+
+    // Save user in localStorage
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    // MOST IMPORTANT FIX
+    localStorage.setItem("user_id", data.user.id);
+
+    // Redirect
+    navigate("/customer/dashboard");
+
+  } catch (err) {
+    setError(err.message);
+  }
+};
+
 
   return (
     <div style={{ maxWidth: 300, margin: "2rem auto" }}>
