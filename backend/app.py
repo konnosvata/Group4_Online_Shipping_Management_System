@@ -140,10 +140,7 @@ def forget():
         db.commit()
 
         #send email
-        # Use request.host_url to derive the frontend URL for both dev and production
-        # Remove trailing slash from host_url
-        base_url = request.host_url.rstrip('/')
-        url = f"{base_url}/resetPassword?token={token}"
+        url = f"http://localhost:3000/resetPassword?token={token}"
 
         #remove later
         return jsonify({
