@@ -1,5 +1,12 @@
 import React, { useState } from "react";
 
+const getTodayUTC2 = () => {
+  const now = new Date();
+  const offset = 2 * 60 * 60 * 1000;
+  const utc2Date = new Date(now.getTime() + offset);
+  return utc2Date.toISOString().split('T')[0];
+};
+
 export default function CreateShipment() {
   const [formData, setFormData] = useState({
     weight: "",
@@ -30,6 +37,7 @@ export default function CreateShipment() {
     setLoading(true);
 
     try {
+      // Get the logged-in user
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user) {
         setError("You must be logged in to create a shipment");
@@ -37,6 +45,7 @@ export default function CreateShipment() {
         return;
       }
 
+      // Validate required fields
       if (
         !formData.weight ||
         !formData.length ||
@@ -50,6 +59,7 @@ export default function CreateShipment() {
         return;
       }
 
+      // Convert numeric fields
       const shipmentData = {
         weight: parseFloat(formData.weight),
         length: parseFloat(formData.length),
@@ -61,6 +71,7 @@ export default function CreateShipment() {
         created_by: user.id,
       };
 
+      // Use direct backend URL for CORS compatibility
       const backendUrl = window.location.hostname === 'localhost' 
         ? 'http://localhost:5000' 
         : `http://${window.location.hostname}:5000`;
@@ -199,6 +210,7 @@ export default function CreateShipment() {
             name="date_to_deliver"
             value={formData.date_to_deliver}
             onChange={handleChange}
+            min={getTodayUTC2()}
             style={{ width: "100%", padding: "8px", marginTop: "5px" }}
             required
           />

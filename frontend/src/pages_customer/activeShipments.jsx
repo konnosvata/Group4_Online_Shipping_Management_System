@@ -1,4 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+
+const getTodayUTC2 = () => {
+  const now = new Date();
+  const offset = 2 * 60 * 60 * 1000;
+  const utc2Date = new Date(now.getTime() + offset);
+  return utc2Date.toISOString().split('T')[0];
+};
 
 function ShipmentsPage() {
   const [shipments, setShipments] = useState([]);
@@ -14,11 +21,7 @@ function ShipmentsPage() {
     ? 'http://localhost:5000' 
     : `http://${window.location.hostname}:5000`;
 
-  useEffect(() => {
-    fetchShipments(showHistory);
-  }, [showHistory]);
-
-  const fetchShipments = async (historyMode) => {
+  const fetchShipments = useCallback(async (historyMode) => {
     try {
       setLoading(true);
       const user = JSON.parse(localStorage.getItem("user"));
@@ -53,7 +56,11 @@ function ShipmentsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [backendUrl]);
+
+  useEffect(() => {
+    fetchShipments(showHistory);
+  }, [showHistory, fetchShipments]);
 
   const handleMenuToggle = (shipmentId) => {
     setMenuOpen(menuOpen === shipmentId ? null : shipmentId);
@@ -114,7 +121,7 @@ function ShipmentsPage() {
   };
 
   const confirmActionHandler = async () => {
-    const { type, shipmentId } = confirmAction;
+    const { shipmentId } = confirmAction;
 
     try {
       let endpoint = "/api/cancelShipment";
@@ -165,12 +172,7 @@ function ShipmentsPage() {
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {shipments.length === 0 ? (
-        <p>
-      {showHistory
-      ? "No shipment history found."
-      : "No active or pending shipments found."
-      }
-  </p>
+        <p>No active or pending shipments found.</p>
       ) : (
         shipments.map((ship) => (
           <div key={ship.shipment_id}>
@@ -243,6 +245,7 @@ function ShipmentsPage() {
                     type="date"
                     value={editForm.date_to_deliver || ""}
                     onChange={(e) => handleEditChange("date_to_deliver", e.target.value)}
+                    min={getTodayUTC2()}
                     style={{ width: "100%", padding: "8px", marginTop: "5px" }}
                   />
                 </div>

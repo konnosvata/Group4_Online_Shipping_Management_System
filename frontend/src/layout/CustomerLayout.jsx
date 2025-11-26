@@ -1,7 +1,14 @@
 import React from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 const CustomerLayout = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/");
+  };
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "sans-serif" }}>
       {/* sidebar */}
@@ -22,18 +29,32 @@ const CustomerLayout = () => {
           <SidebarLink to="/customer/schedule-pickup" label="Schedule Pickup" />
           <SidebarLink to="/customer/tracking" label="Tracking" />
           <SidebarLink to="/customer/payments" label="Payments" />
-          <SidebarLink to="/customer/chat" label="Communication" />
-          <SidebarLink to="/customer/settings" label="Edit Profile" />
+          <SidebarLink to="/customer/chat" label="Chat with Courier" />
+          <SidebarLink to="/customer/settings" label="Account Settings" />
         </nav>
       </aside>
 
       {/* main content */}
       <main style={{ flex: 1, padding: "24px 40px" }}>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
-          <span>Login</span>
+          <button
+            onClick={handleLogout}
+            style={{
+              padding: "8px 16px",
+              backgroundColor: "#dc3545",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: "500"
+            }}
+          >
+            Logout
+          </button>
         </div>
 
-        {/* here each teammate’s page will be rendered */}
+        {/* here each teammate's page will be rendered */}
         <Outlet />
       </main>
     </div>
