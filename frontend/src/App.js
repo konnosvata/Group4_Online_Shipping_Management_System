@@ -17,6 +17,17 @@ import ChatWithCourier from "./pages_customer/ChatWithCourier";
 import AccountSettings from "./pages_customer/AccountSettings";
 import ActiveShipments from "./pages_customer/activeShipments";
 
+//driver
+import DriverLayout from "./layout/DriverLayout";
+import AssignedShipments from "./pages_Driver/AssignedShipments.jsx";
+import UpdateShipment from "./pages_Driver/UpdateShipment.jsx";
+
+//admin
+import AdminLayout from "./layout/AdminLayout";
+import MonitorDrivers from "./pages_Admin/MonitorDrivers";
+import ShippingReport from "./pages_Admin/ShippingReport";
+import UpdatePricing from "./pages_Admin/UpdatePricing";
+
 function App() {
   return (
     <BrowserRouter>
@@ -75,6 +86,30 @@ function App() {
           <Route path="settings" element={<AccountSettings />} />
 
         </Route>
+
+        {/* DRIVER ROUTES */}
+        <Route path="driver" element={<DriverLayout />}>
+
+            {/* default page when visiting /driver */}
+            <Route index element={<AssignedShipments />} />
+
+            <Route path="assignedShipments" element={<AssignedShipments />} />
+            <Route path="updateShipment" element={<UpdateShipment />} />
+
+        </Route>
+
+        {/* ADMIN ROUTES */}
+        <Route path="admin" element={<AdminLayout />}>
+
+            {/* default page when visiting /admin */}
+            <Route index element={<MonitorDrivers />} />
+
+            <Route path="monitorDrivers" element={<MonitorDrivers />} />
+            <Route path="shippingReport" element={<ShippingReport />} />
+            <Route path="updatePricing" element={<UpdatePricing />} />
+
+        </Route>
+
 
       </Routes>
     </BrowserRouter>
