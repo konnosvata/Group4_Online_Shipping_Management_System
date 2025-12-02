@@ -60,6 +60,7 @@ def login():
             "user": {
                 "id": user["user_id"],
                 "name": user["name"],
+                "email": user["email"],
                 "role_id": user["role_id"],
             }
         }), 200 
