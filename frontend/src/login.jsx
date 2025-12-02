@@ -28,10 +28,20 @@ function Login() {
       }
 
       // success message from backend
-      setSuccess(`Logged in as ${data.user.name}. Redirecting...`);
       setSuccess(`Logged in as ${data.user.name}`);
       localStorage.setItem("user", JSON.stringify(data.user));
-      navigate("/customer/dashboard");
+      if (data.user.role_id === 1) {
+        navigate("/customer/dashboard");
+      } 
+      else if (data.user.role_id === 2) {
+        navigate("/driver/assignedShipments");
+      }
+      else if (data.user.role_id === 3) {
+        navigate("/admin/monitorDrivers");
+      } 
+      else {
+        setError("Unknown role");
+      }
 
     } catch (err) {
       setError(err.message);

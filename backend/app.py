@@ -60,8 +60,9 @@ def login():
             "user": {
                 "id": user["user_id"],
                 "name": user["name"],
+                "role_id": user["role_id"],
             }
-        }), 200
+        }), 200 
 
     except Exception as e:
         app.logger.exception("Error in /api/login")
