@@ -1,3 +1,3 @@
-export default function Payments() {
+export default function AssignedShipments() {
   return <h1>test1</h1>;
 }
