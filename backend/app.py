@@ -3,8 +3,11 @@ import sqlite3
 from flask import Flask, jsonify, request, g
 from flask_cors import CORS
 import uuid
+import requests
 
 
+
+ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjVhMjg1ZWQzMTZhMDQzYjg5NTlhZTMwNzZhMTM2N2ZkIiwiaCI6Im11cm11cjY0In0="
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE = os.path.join(BASE_DIR, "..", "Database.db")
@@ -552,6 +555,50 @@ def update_user():
         return jsonify({"message": "User updated successfully"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.post("/plan-route")
+def plan_route():
+    try:
+        data = request.get_json()
+        coordinates = data.get("coordinates")
+
+        if not coordinates:
+            return jsonify({"error": "No coordinates provided"}), 400
+
+        url = "https://api.openrouteservice.org/v2/directions/driving-car"
+
+        # Include profile explicitly
+        payload = {
+            "coordinates": coordinates,
+            "profile": "driving-car"
+        }
+
+        headers = {
+            "Authorization": ORS_API_KEY,
+            "Content-Type": "application/json"
+        }
+
+        response = requests.post(url, json=payload, headers=headers)
+
+        # Parse JSON safely
+        try:
+            ors_data = response.json()
+        except ValueError:
+            app.logger.error("ORS returned invalid JSON: %s", response.text)
+            return jsonify({"error": "Invalid response from ORS"}), 500
+
+        # Check for ORS errors
+        if response.status_code != 200 or "error" in ors_data:
+            app.logger.error("ORS API Error: %s", ors_data)
+            return jsonify({"error": "ORS API Error", "details": ors_data}), 500
+
+        app.logger.debug("ORS data: %s", ors_data)
+        return jsonify(ors_data)
+
+    except Exception as e:
+        app.logger.exception("Error in /plan-route")
+        return jsonify({"error": str(e)}), 500
+
 
 
 

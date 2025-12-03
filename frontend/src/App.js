@@ -5,6 +5,7 @@ import Login from "./login";
 import Registration from "./registration";
 import Forget from "./forget";
 import ResetPassword from "./resetPassword";
+import 'leaflet/dist/leaflet.css';
 
 // Customer area
 import CustomerLayout from "./layout/CustomerLayout";
