@@ -22,6 +22,8 @@ import Payment from "./pages_customer/Payment";
 import DriverLayout from "./layout/DriverLayout";
 import AssignedShipments from "./pages_Driver/AssignedShipments.jsx";
 import UpdateShipment from "./pages_Driver/UpdateShipment.jsx";
+import DriverRoute from "./pages_Driver/DriverRoute.jsx";
+
 
 //admin
 import AdminLayout from "./layout/AdminLayout";
@@ -97,7 +99,9 @@ function App() {
             <Route index element={<AssignedShipments />} />
 
             <Route path="assignedShipments" element={<AssignedShipments />} />
+            <Route path="driverRoute" element={<DriverRoute />} />
             <Route path="updateShipment" element={<UpdateShipment />} />
+           
 
         </Route>
 

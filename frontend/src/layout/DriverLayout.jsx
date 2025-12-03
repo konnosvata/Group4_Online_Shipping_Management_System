@@ -24,7 +24,9 @@ const DriverLayout = () => {
 
         <nav style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <SidebarLink to="/driver/assignedShipments" label="Assigned Shipments" />
+          <SidebarLink to="/driver/driverRoute" label="Route" />
           <SidebarLink to="/driver/updateShipment" label="Update Shipment" />
+          
         </nav>
       </aside>
 
