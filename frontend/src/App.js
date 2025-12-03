@@ -16,6 +16,7 @@ import Payments from "./pages_customer/Payments";
 import ChatWithCourier from "./pages_customer/ChatWithCourier";
 import AccountSettings from "./pages_customer/AccountSettings";
 import ActiveShipments from "./pages_customer/activeShipments";
+import Payment from "./pages_customer/Payment";
 
 //driver
 import DriverLayout from "./layout/DriverLayout";
@@ -78,6 +79,8 @@ function App() {
 
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="create-shipment" element={<CreateShipment />} />
+          <Route path="payment" element={<Payment />} />
+          <Route path="active-shipments" element={<ActiveShipments />} />
           <Route path="activeShipments" element={<ActiveShipments />} />
           <Route path="schedule-pickup" element={<SchedulePickup />} />
           <Route path="tracking" element={<Tracking />} />

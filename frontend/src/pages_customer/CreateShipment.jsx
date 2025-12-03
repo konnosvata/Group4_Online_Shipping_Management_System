@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const getTodayUTC2 = () => {
   const now = new Date();
@@ -8,6 +9,8 @@ const getTodayUTC2 = () => {
 };
 
 export default function CreateShipment() {
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     weight: "",
     length: "",
@@ -71,35 +74,8 @@ export default function CreateShipment() {
         created_by: user.id,
       };
 
-      // Use direct backend URL for CORS compatibility
-      const backendUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:5000' 
-        : `http://${window.location.hostname}:5000`;
-
-      const res = await fetch(`${backendUrl}/api/createShipment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(shipmentData),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Failed to create shipment");
-        setLoading(false);
-        return;
-      }
-
-      setMessage("Shipment created successfully!");
-      setFormData({
-        weight: "",
-        length: "",
-        width: "",
-        height: "",
-        destination: "",
-        fragile: 0,
-        date_to_deliver: "",
-      });
+      // Navigate to payment page with shipment data
+      navigate("/customer/payment", { state: { shipmentData } });
     } catch (err) {
       setError("Error: " + err.message);
     } finally {
