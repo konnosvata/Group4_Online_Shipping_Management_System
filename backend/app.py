@@ -73,16 +73,36 @@ def login():
 @app.post("/api/register")
 def register():
     try:
-        data = request.get_json()
-        name = data.get("name")
-        email = data.get("email")
-        password = data.get("password")
+        data = request.get_json() or {}
 
-        if not name or not email or not password:
-            return jsonify({"error": "Name, email, and password are required"}), 400
+        # Use safe defaults
+        name = (data.get("name") or "").strip()
+        email = (data.get("email") or "").strip()
+        password = (data.get("password") or "").strip()
+
+        # ---- Michalis' core validation module here ----
+        required_fields = ["name", "email", "password"]
+        field_types = {
+            "email": "email",
+            "password": "password"
+        }
+
+        errors = validate_input(
+            {"name": name, "email": email, "password": password},
+            required_fields,
+            field_types
+        )
+
+        if errors:
+            return jsonify({
+                "error": "Validation failed",
+                "details": errors
+            }), 400
+        # ----------------------------------------------
 
         db = get_db()
 
+        # Database-level validation: unique email
         existing_user = db.execute(
             "SELECT * FROM users WHERE email = ?", (email,)
         ).fetchone()
@@ -112,6 +132,8 @@ def register():
     except Exception as e:
         app.logger.exception("Error in /api/register")
         return jsonify({"error": "Internal server error"}), 500
+
+
     
 # forget backend
 @app.post("/api/forget")
