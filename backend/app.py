@@ -344,7 +344,7 @@ def create_shipment():
         # Insert new shipment
         db.execute(
             """INSERT INTO shipments (customer_id, driver_id, created_by, weight, length, width, height, destination, fragile, date_created, date_to_deliver, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?)""",
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '+2 hours'), ?, ?)""",
             (customer_id, driver_id, created_by, weight, length, width, height, destination, fragile, date_to_deliver, 'pending')
         )
         db.commit()
