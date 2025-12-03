@@ -75,13 +75,29 @@ def login():
 @app.post("/api/register")
 def register():
     try:
-        data = request.get_json()
-        name = data.get("name")
-        email = data.get("email")
-        password = data.get("password")
+        data = request.get_json() or {}
 
-        if not name or not email or not password:
-            return jsonify({"error": "Name, email, and password are required"}), 400
+        name = (data.get("name") or "").strip()
+        email = (data.get("email") or "").strip()
+        password = (data.get("password") or "").strip()
+
+        required_fields = ["name", "email", "password"]
+        field_types = {
+            "email": "email",
+            "password": "password"
+        }
+
+        errors = validate_input(
+            {"name": name, "email": email, "password": password},
+            required_fields,
+            field_types
+        )
+
+        if errors:
+            return jsonify({
+                "error": "Validation failed",
+                "details": errors
+            }), 400
 
         db = get_db()
 
@@ -92,7 +108,6 @@ def register():
         if existing_user:
             return jsonify({"error": "Email already registered"}), 400
 
-        # Insert new user with default role
         db.execute(
             "INSERT INTO users (name, email, password, role_id) VALUES (?, ?, ?, ?)",
             (name, email, password, 1)
@@ -114,6 +129,7 @@ def register():
     except Exception as e:
         app.logger.exception("Error in /api/register")
         return jsonify({"error": "Internal server error"}), 500
+
     
 # forget backend
 @app.post("/api/forget")
