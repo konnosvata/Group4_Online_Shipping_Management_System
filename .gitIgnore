@@ -7,3 +7,6 @@ venv/
 
 #python cache
 __pychache__/
+
+#inore node modules
+node_modules/
