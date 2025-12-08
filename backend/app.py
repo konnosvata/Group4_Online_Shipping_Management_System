@@ -601,6 +601,54 @@ def plan_route():
 
 
 
+@app.post("/api/schedulePickup")
+def schedule_pickup():
+    try:
+        data = request.get_json()
+
+        required = ["shipment_id", "pickup_date", "pickup_time", "pickup_location"]
+        missing = [f for f in required if not data.get(f)]
+
+        if missing:
+            return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
+
+        shipment_id = data["shipment_id"]
+        pickup_date = data["pickup_date"]
+        pickup_time = data["pickup_time"]
+        pickup_location = data["pickup_location"]
+        handoff_details = data.get("handoff_details", "")
+
+        db = get_db()
+
+        # Check if shipment exists
+        shipment = db.execute(
+            "SELECT * FROM shipments WHERE shipment_id = ?", (shipment_id,)
+        ).fetchone()
+
+        if not shipment:
+            return jsonify({"error": "Shipment does not exist"}), 404
+
+        # Cannot schedule if already cancelled or delivered
+        if shipment["status"] not in ("pending", "active"):
+            return jsonify({"error": "This shipment cannot be scheduled"}), 400
+
+        # Insert pickup request
+        db.execute(
+            """
+            INSERT INTO pickup_requests
+            (shipment_id, pickup_date, pickup_time, pickup_location, handoff_details)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (shipment_id, pickup_date, pickup_time, pickup_location, handoff_details)
+        )
+        db.commit()
+
+        return jsonify({"message": "Pickup scheduled successfully"}), 201
+
+    except Exception as e:
+        app.logger.exception("Error in /api/schedulePickup")
+        return jsonify({"error": str(e)}), 500
+
 
 #use port 8000 for backend (port 5000 is reserved by Replit for frontend webview)
 if __name__ == "__main__":
