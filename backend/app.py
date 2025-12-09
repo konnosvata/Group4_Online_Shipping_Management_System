@@ -355,22 +355,25 @@ def create_shipment():
 def get_active_shipments():
     try:
         user_id = request.args.get("user_id")
-
         if not user_id:
             return jsonify({"error": "user_id is required"}), 400
 
         db = get_db()
         rows = db.execute(
             """
-            SELECT * FROM shipments 
-            WHERE created_by = ? AND (status = 'active' OR status = 'pending')
+            SELECT s.*, d.last_latitude, d.last_longitude
+            FROM shipments s
+            JOIN drivers d ON s.driver_id = d.driver_id
+            WHERE s.created_by = ? AND (s.status = 'active' OR s.status = 'pending')
             """,
             (user_id,)
         ).fetchall()
 
         shipments = [dict(row) for row in rows]
-
         return jsonify(shipments), 200
+    except Exception as e:
+        app.logger.exception("Error in /api/activeShipments")
+        return jsonify({"error": "Internal server error"}), 500
 
     except Exception as e:
         app.logger.exception("Error in /api/activeShipments")
@@ -555,49 +558,101 @@ def update_user():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+
+
+
 @app.post("/plan-route")
 def plan_route():
     try:
         data = request.get_json()
-        coordinates = data.get("coordinates")
+        coordinates = data.get("coordinates", [])
 
-        if not coordinates:
-            return jsonify({"error": "No coordinates provided"}), 400
+        if len(coordinates) < 2:
+            return jsonify({"error": "At least 2 points required"}), 400
 
+        # ORS Directions API request
         url = "https://api.openrouteservice.org/v2/directions/driving-car"
-
-        # Include profile explicitly
         payload = {
             "coordinates": coordinates,
-            "profile": "driving-car"
+            "instructions": False,
+            "geometry_simplify": False
         }
+        headers = {"Authorization": ORS_API_KEY, "Content-Type": "application/json"}
 
-        headers = {
-            "Authorization": ORS_API_KEY,
-            "Content-Type": "application/json"
-        }
+        res = requests.post(url, json=payload, headers=headers)
+        route_data = res.json()
 
-        response = requests.post(url, json=payload, headers=headers)
+        print("Route data from ORS:", route_data)  # Debug
 
-        # Parse JSON safely
-        try:
-            ors_data = response.json()
-        except ValueError:
-            app.logger.error("ORS returned invalid JSON: %s", response.text)
-            return jsonify({"error": "Invalid response from ORS"}), 500
+        if res.status_code != 200 or "error" in route_data:
+            return jsonify({"error": "ORS API error", "details": route_data}), 500
 
-        # Check for ORS errors
-        if response.status_code != 200 or "error" in ors_data:
-            app.logger.error("ORS API Error: %s", ors_data)
-            return jsonify({"error": "ORS API Error", "details": ors_data}), 500
-
-        app.logger.debug("ORS data: %s", ors_data)
-        return jsonify(ors_data)
-
+        return jsonify(route_data)
     except Exception as e:
-        app.logger.exception("Error in /plan-route")
         return jsonify({"error": str(e)}), 500
 
+
+@app.post("/save-driver-location")
+def save_driver_location():
+    try:
+        data = request.get_json()
+        app.logger.debug(f"Received JSON: {data}")
+
+        if not data:
+            return jsonify({"error": "No JSON data received"}), 400
+
+        user_id = data.get("user_id")
+        latitude = data.get("latitude")
+        longitude = data.get("longitude")
+
+        # Check for missing fields
+        if user_id is None or latitude is None or longitude is None:
+            return jsonify({
+                "error": "Missing fields",
+                "received": {"user_id": user_id, "latitude": latitude, "longitude": longitude}
+            }), 400
+
+        # Convert user_id to int if possible
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid user_id"}), 400
+
+        # Convert latitude and longitude to float
+        try:
+            latitude = float(latitude)
+            longitude = float(longitude)
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid latitude or longitude"}), 400
+
+        db = get_db()
+        cursor = db.cursor()
+
+        cursor.execute(
+            """
+            UPDATE drivers
+            SET last_latitude = ?, 
+                last_longitude = ?
+            WHERE user_id = ?
+            """,
+            (latitude, longitude, user_id)
+        )
+
+        db.commit()
+
+        if cursor.rowcount == 0:
+            return jsonify({"error": "User not found in drivers table"}), 404
+
+        return jsonify({
+            "status": "saved",
+            "user_id": user_id,
+            "latitude": latitude,
+            "longitude": longitude
+        }), 200
+
+    except Exception as e:
+        app.logger.exception("Error in /save-driver-location")
+        return jsonify({"error": str(e)}), 500
 
 
 @app.post("/api/schedulePickup")

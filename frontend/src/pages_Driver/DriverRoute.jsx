@@ -1,77 +1,110 @@
-// DriverRoute.jsx
 import { useState } from "react";
-import { MapContainer, TileLayer, Polyline, useMap } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polyline,
+  Popup,
+  useMapEvents,
+} from "react-leaflet";
+import { DivIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// FitBounds component to auto-zoom to route
-function FitBounds({ coords }) {
-  const map = useMap();
-  if (coords.length) {
-    map.fitBounds(coords);
-  }
+// Detect map clicks
+function MapClicker({ onClick }) {
+  useMapEvents({
+    click(e) {
+      onClick([e.latlng.lat, e.latlng.lng]);
+    },
+  });
   return null;
 }
 
-export default function DriverRoute() {
-  const [route, setRoute] = useState(null);
+export default function DirectLineRoute() {
+  const [points, setPoints] = useState([]); // stored clicked points
 
-  // Hardcoded Cyprus route: EUC → Lidras → Nicosia Mall
- const fallbackRoute = [
-  [33.33956, 35.16042], // EUC
-  [33.36553, 35.17393], // Lidras
-  [33.37154, 35.13046], // Nicosia Mall
-];
+  const addPoint = (latlng) => setPoints([...points, latlng]);
 
-  const loadRoute = async () => {
+  const clearPoints = () => setPoints([]);
+
+  // Remove OLDEST marker & save to backend
+  const removeOldestPoint = async () => {
+    if (points.length === 0) return;
+
+    const removedPoint = points[0];
+    setPoints(points.slice(1));
+
     try {
-      const res = await fetch("http://localhost:5000/plan-route", {
+      // Read the saved user object from localStorage
+      const user = JSON.parse(localStorage.getItem("user"));
+      const userId = user?.id;
+
+      if (!userId) {
+        console.error("No user_id found in localStorage!");
+        return;
+      }
+
+      await fetch("http://127.0.0.1:5000/save-driver-location", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coordinates: fallbackRoute }),
+        body: JSON.stringify({
+          user_id: userId,
+          latitude: removedPoint[0],
+          longitude: removedPoint[1],
+        }),
       });
-
-      const data = await res.json();
-
-      if (!data.features || data.features.length === 0) {
-        console.warn("No route returned from ORS, using fallback route.");
-        // Wrap fallbackRoute in ORS-like structure
-        setRoute({
-          features: [{ geometry: { coordinates: fallbackRoute } }],
-        });
-      } else {
-        setRoute(data);
-      }
     } catch (err) {
-      console.error("Error fetching route:", err);
-      // On error, fall back to test route
-      setRoute({
-        features: [{ geometry: { coordinates: fallbackRoute } }],
-      });
+      console.error("Failed to save removed point:", err);
     }
   };
 
-  function RouteMap({ route }) {
-    if (!route?.features?.length) return null;
-
-    // Leaflet expects [lat, lng], ORS gives [lng, lat]
-    const coords = route.features[0].geometry.coordinates.map(c => [c[1], c[0]]);
-
-    return (
-      <MapContainer style={{ height: "500px", width: "100%" }}>
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <Polyline positions={coords} color="blue" />
-        <FitBounds coords={coords} />
-      </MapContainer>
-    );
-  }
+  // Green check emoji marker
+  const checkIcon = new DivIcon({
+    className: "",
+    html: "✅",
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Driver Route Planner</h1>
-      <button onClick={loadRoute} style={{ marginBottom: "10px" }}>
-        Load Route
+    <div style={{ padding: "20px", maxWidth: "800px" }}>
+      <h2>🗺 Click-to-Connect Route</h2>
+
+      <button
+        onClick={clearPoints}
+        style={{ marginBottom: 10, marginRight: 10 }}
+      >
+        Clear Points
       </button>
-      {route && <RouteMap route={route} />}
+
+      <button
+        onClick={removeOldestPoint}
+        disabled={points.length === 0}
+        style={{ marginBottom: 10 }}
+      >
+        Remove Oldest Point
+      </button>
+
+      <MapContainer
+        style={{ height: "500px", width: "100%" }}
+        center={[35.1856, 33.3823]} // Cyprus center
+        zoom={13}
+      >
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
+        {/* Enable click-to-add */}
+        <MapClicker onClick={addPoint} />
+
+        {/* Markers */}
+        {points.map((p, idx) => (
+          <Marker key={idx} position={p} icon={checkIcon}>
+            <Popup>Point #{idx + 1}</Popup>
+          </Marker>
+        ))}
+
+        {/* Auto-create polyline */}
+        {points.length > 1 && <Polyline positions={points} color="blue" />}
+      </MapContainer>
     </div>
   );
 }
