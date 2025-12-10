@@ -31,7 +31,7 @@ function Login() {
       setSuccess(`Logged in as ${data.user.name}`);
       localStorage.setItem("user", JSON.stringify(data.user));
       if (data.user.role_id === 1) {
-        navigate("/customer/dashboard");
+        navigate("/customer/Create-Shipment");
       } 
       else if (data.user.role_id === 2) {
         navigate("/driver/assignedShipments");
