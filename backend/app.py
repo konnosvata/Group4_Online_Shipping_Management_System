@@ -6,7 +6,6 @@ import uuid
 import requests
 import yagmail
 
-
 ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjVhMjg1ZWQzMTZhMDQzYjg5NTlhZTMwNzZhMTM2N2ZkIiwiaCI6Im11cm11cjY0In0="
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -145,7 +144,6 @@ def forget():
             (email, token)
         )
         db.commit()
-
 
         #send email
         yag = yagmail.SMTP('group4shipping@gmail.com', 'opmh ljmd gvmi gctx')
@@ -375,10 +373,6 @@ def get_active_shipments():
         app.logger.exception("Error in /api/activeShipments")
         return jsonify({"error": "Internal server error"}), 500
 
-    except Exception as e:
-        app.logger.exception("Error in /api/activeShipments")
-        return jsonify({"error": "Internal server error"}), 500
-
 @app.get("/api/allShipments")
 def get_all_shipments():
     try:
@@ -530,7 +524,6 @@ def get_user():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @app.route("/api/updateUser", methods=["POST"])
 def update_user():
     try:
@@ -557,9 +550,126 @@ def update_user():
         return jsonify({"message": "User updated successfully"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
 
+@app.get("/api/assignedShipments")
+def get_assigned_shipments():
+    try:
+        user_id = request.args.get("user_id")
 
+        if not user_id:
+            return jsonify({"error": "user_id is required"}), 400
+
+        db = get_db()
+
+        driver = db.execute(
+            "SELECT driver_id FROM drivers WHERE user_id = ?", (user_id,)
+        ).fetchone()
+
+        if not driver:
+            return jsonify({"error": "Driver not found"}), 404
+
+        driver_id = driver["driver_id"]
+
+        rows = db.execute(
+            """
+            SELECT * FROM shipments
+            WHERE driver_id = ? AND (status = 'pending' OR status = 'active')
+            ORDER BY date_to_deliver ASC
+            """,
+            (driver_id,)
+        ).fetchall()
+
+        shipments = [dict(row) for row in rows]
+
+        return jsonify(shipments), 200
+
+    except Exception as e:
+        app.logger.exception("Error in /api/assignedShipments")
+        return jsonify({"error": "Internal server error"}), 500
+
+@app.get("/api/assignedShipmentsHistory")
+def get_assigned_shipments_history():
+    try:
+        user_id = request.args.get("user_id")
+
+        if not user_id:
+            return jsonify({"error": "user_id is required"}), 400
+
+        db = get_db()
+
+        driver = db.execute(
+            "SELECT driver_id FROM drivers WHERE user_id = ?", (user_id,)
+        ).fetchone()
+
+        if not driver:
+            return jsonify({"error": "Driver not found"}), 404
+
+        driver_id = driver["driver_id"]
+
+        rows = db.execute(
+            """
+            SELECT * FROM shipments
+            WHERE driver_id = ?
+            ORDER BY date_created DESC
+            """,
+            (driver_id,)
+        ).fetchall()
+
+        shipments = [dict(row) for row in rows]
+
+        return jsonify(shipments), 200
+
+    except Exception as e:
+        app.logger.exception("Error in /api/assignedShipmentsHistory")
+        return jsonify({"error": "Internal server error"}), 500
+
+@app.post("/api/schedulePickup")
+def schedule_pickup():
+    try:
+        data = request.get_json()
+
+        required = ["shipment_id", "pickup_date", "pickup_time", "pickup_location"]
+        missing = [f for f in required if not data.get(f)]
+
+        if missing:
+            return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
+
+        shipment_id = data["shipment_id"]
+        pickup_date = data["pickup_date"]
+        pickup_time = data["pickup_time"]
+        pickup_location = data["pickup_location"]
+        handoff_details = data.get("handoff_details", "")
+
+        db = get_db()
+
+        # Check if shipment exists
+        shipment = db.execute(
+            "SELECT * FROM shipments WHERE shipment_id = ?", (shipment_id,)
+        ).fetchone()
+
+        if not shipment:
+            return jsonify({"error": "Shipment does not exist"}), 404
+
+        # Cannot schedule if already cancelled or delivered
+        if shipment["status"] not in ("pending", "active"):
+            return jsonify({"error": "This shipment cannot be scheduled"}), 400
+
+        # Insert pickup request
+        db.execute(
+            """
+            INSERT INTO pickup_requests
+            (shipment_id, pickup_date, pickup_time, pickup_location, handoff_details)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (shipment_id, pickup_date, pickup_time, pickup_location, handoff_details)
+        )
+        db.commit()
+
+        return jsonify({"message": "Pickup scheduled successfully"}), 201
+
+    except Exception as e:
+        app.logger.exception("Error in /api/schedulePickup")
+        return jsonify({"error": str(e)}), 500
 
 @app.post("/plan-route")
 def plan_route():
@@ -590,7 +700,6 @@ def plan_route():
         return jsonify(route_data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.post("/save-driver-location")
 def save_driver_location():
@@ -653,56 +762,6 @@ def save_driver_location():
     except Exception as e:
         app.logger.exception("Error in /save-driver-location")
         return jsonify({"error": str(e)}), 500
-
-
-@app.post("/api/schedulePickup")
-def schedule_pickup():
-    try:
-        data = request.get_json()
-
-        required = ["shipment_id", "pickup_date", "pickup_time", "pickup_location"]
-        missing = [f for f in required if not data.get(f)]
-
-        if missing:
-            return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
-
-        shipment_id = data["shipment_id"]
-        pickup_date = data["pickup_date"]
-        pickup_time = data["pickup_time"]
-        pickup_location = data["pickup_location"]
-        handoff_details = data.get("handoff_details", "")
-
-        db = get_db()
-
-        # Check if shipment exists
-        shipment = db.execute(
-            "SELECT * FROM shipments WHERE shipment_id = ?", (shipment_id,)
-        ).fetchone()
-
-        if not shipment:
-            return jsonify({"error": "Shipment does not exist"}), 404
-
-        # Cannot schedule if already cancelled or delivered
-        if shipment["status"] not in ("pending", "active"):
-            return jsonify({"error": "This shipment cannot be scheduled"}), 400
-
-        # Insert pickup request
-        db.execute(
-            """
-            INSERT INTO pickup_requests
-            (shipment_id, pickup_date, pickup_time, pickup_location, handoff_details)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (shipment_id, pickup_date, pickup_time, pickup_location, handoff_details)
-        )
-        db.commit()
-
-        return jsonify({"message": "Pickup scheduled successfully"}), 201
-
-    except Exception as e:
-        app.logger.exception("Error in /api/schedulePickup")
-        return jsonify({"error": str(e)}), 500
-
 
 #use port 8000 for backend (port 5000 is reserved by Replit for frontend webview)
 if __name__ == "__main__":
