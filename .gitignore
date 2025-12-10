@@ -1,2 +1,12 @@
-node_modules/
+#ignore virtual environment
 .env
+venv/
+
+#ignore vs studio settings
+.DS_Store
+
+#python cache
+__pychache__/
+
+#inore node modules
+node_modules/
