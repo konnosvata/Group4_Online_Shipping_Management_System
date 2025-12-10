@@ -703,6 +703,42 @@ def schedule_pickup():
         app.logger.exception("Error in /api/schedulePickup")
         return jsonify({"error": str(e)}), 500
 
+@app.get("/api/assignedShipments")
+def get_assigned_shipments():
+    try:
+        user_id = request.args.get("user_id")
+
+        if not user_id:
+            return jsonify({"error": "user_id is required"}), 400
+
+        db = get_db()
+
+        driver = db.execute(
+            "SELECT driver_id FROM drivers WHERE user_id = ?", (user_id,)
+        ).fetchone()
+
+        if not driver:
+            return jsonify({"error": "Driver not found"}), 404
+
+        driver_id = driver["driver_id"]
+
+        rows = db.execute(
+            """
+            SELECT * FROM shipments
+            WHERE driver_id = ? AND (status = 'pending' OR status = 'active')
+            ORDER BY date_to_deliver ASC
+            """,
+            (driver_id,)
+        ).fetchall()
+
+        shipments = [dict(row) for row in rows]
+
+        return jsonify(shipments), 200
+
+    except Exception as e:
+        app.logger.exception("Error in /api/assignedShipments")
+        return jsonify({"error": "Internal server error"}), 500
+
 
 #use port 8000 for backend (port 5000 is reserved by Replit for frontend webview)
 if __name__ == "__main__":
