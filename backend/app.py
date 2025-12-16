@@ -858,6 +858,50 @@ def monitor_drivers():
         app.logger.exception("Error in /api/monitorDrivers")
         return jsonify({"error": "Internal server error"}), 500
 
+@app.post("/api/updateShipmentStatus")
+def update_shipment_status():
+    try:
+        data = request.get_json()
+
+        shipment_id = data.get("shipment_id")
+        new_status = data.get("status")
+
+        # Validation
+        if not shipment_id or not new_status:
+            return jsonify({"error": "shipment_id and status are required"}), 400
+
+        if new_status not in ["pending", "picked up", "delivered"]:
+            return jsonify({"error": "Invalid status value"}), 400
+
+        db = get_db()
+
+        # Check shipment exists
+        shipment = db.execute(
+            "SELECT * FROM shipments WHERE shipment_id = ?",
+            (shipment_id,)
+        ).fetchone()
+
+        if not shipment:
+            return jsonify({"error": "Shipment not found"}), 404
+
+        # Update status
+        db.execute(
+            "UPDATE shipments SET status = ? WHERE shipment_id = ?",
+            (new_status, shipment_id)
+        )
+        db.commit()
+
+        return jsonify({
+            "message": "Shipment status updated successfully",
+            "shipment_id": shipment_id,
+            "new_status": new_status
+        }), 200
+
+    except Exception as e:
+        app.logger.exception("Error in /api/updateShipmentStatus")
+        return jsonify({"error": "Internal server error"}), 500
+
+
 
 
 
