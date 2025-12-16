@@ -762,6 +762,61 @@ def save_driver_location():
     except Exception as e:
         app.logger.exception("Error in /save-driver-location")
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/api/getPaymentFormula", methods=["GET"])
+def get_payment_formula():
+    try:
+        cur = get_db().cursor()
+        cur.execute("SELECT * FROM payment_formula WHERE formula_id = 1")
+        row = cur.fetchone()
+
+        if not row:
+            return jsonify({"error": "Formula not found"}), 404
+
+        return jsonify(dict(row))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/api/updatePaymentFormula", methods=["POST"])
+def update_payment_formula():
+    try:
+        data = request.get_json()
+
+        limits = {
+            "price_per_km": 10,
+            "price_per_weight": 20,
+            "base_fee": 100,
+            "fragile_fee": 50
+        }
+
+        values = {}
+        for key, max_val in limits.items():
+            val = float(data.get(key, -1))
+            if val < 0 or val > max_val:
+                return jsonify({"error": f"{key} must be between 0 and {max_val}"}), 400
+            values[key] = val
+
+        cur = get_db().cursor()
+        cur.execute("""
+            UPDATE payment_formula
+            SET price_per_km = ?,
+                price_per_weight = ?,
+                base_fee = ?,
+                fragile_fee = ?
+            WHERE formula_id = 1
+        """, (
+            values["price_per_km"],
+            values["price_per_weight"],
+            values["base_fee"],
+            values["fragile_fee"]
+        ))
+
+        get_db().commit()
+        return jsonify({"message": "Payment formula updated"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 
 #use port 8000 for backend (port 5000 is reserved by Replit for frontend webview)
 if __name__ == "__main__":
