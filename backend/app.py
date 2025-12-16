@@ -816,6 +816,49 @@ def update_payment_formula():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.get("/api/monitorDrivers")
+def monitor_drivers():
+    try:
+        db = get_db()
+
+        rows = db.execute("""
+            SELECT 
+                d.driver_id,
+                u.name AS driver_name,
+                s.shipment_id,
+                s.destination,
+                s.status
+            FROM drivers d
+            JOIN users u ON d.user_id = u.user_id
+            LEFT JOIN shipments s ON d.driver_id = s.driver_id
+            ORDER BY d.driver_id
+        """).fetchall()
+
+        drivers = {}
+        for row in rows:
+            driver_id = row["driver_id"]
+
+            if driver_id not in drivers:
+                drivers[driver_id] = {
+                    "driver_id": driver_id,
+                    "driver_name": row["driver_name"],
+                    "shipments": []
+                }
+
+            if row["shipment_id"]:
+                drivers[driver_id]["shipments"].append({
+                    "shipment_id": row["shipment_id"],
+                    "destination": row["destination"],
+                    "status": row["status"]
+                })
+
+        return jsonify(list(drivers.values())), 200
+
+    except Exception as e:
+        app.logger.exception("Error in /api/monitorDrivers")
+        return jsonify({"error": "Internal server error"}), 500
+
+
 
 
 #use port 8000 for backend (port 5000 is reserved by Replit for frontend webview)
