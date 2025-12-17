@@ -415,7 +415,7 @@ def communication():
             driver_cols = [row["name"] for row in db.execute("PRAGMA table_info(drivers)").fetchall()]
         except Exception:
             driver_cols = []
-        has_driver_phone = "phone" in driver_cols
+        has_driver_phone = "phone_number" in driver_cols
 
         shipments = db.execute(
             """
@@ -430,7 +430,7 @@ def communication():
 
         for s in shipments:
             driver_select = (
-                "d.phone AS phone" if has_driver_phone else "NULL AS phone"
+                "d.phone_number AS phone" if has_driver_phone else "NULL AS phone"
             )
             driver = db.execute(
                 f"""
@@ -685,7 +685,7 @@ def get_assigned_shipments_history():
 @app.post("/api/schedulePickup")
 def schedule_pickup():
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
 
         required = ["shipment_id", "pickup_date", "pickup_time", "pickup_location"]
         missing = [f for f in required if not data.get(f)]
@@ -694,34 +694,45 @@ def schedule_pickup():
             return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
 
         shipment_id = data["shipment_id"]
-        pickup_date = data["pickup_date"]
-        pickup_time = data["pickup_time"]
+        pickup_date = data["pickup_date"]      # YYYY-MM-DD
+        pickup_time = data["pickup_time"]      # HH:MM
         pickup_location = data["pickup_location"]
         handoff_details = data.get("handoff_details", "")
 
+        # Store combined datetime into shipments.date_to_pickup
+        datetime_to_pickup = f"{pickup_date} {pickup_time}"
+
         db = get_db()
 
-        # Check if shipment exists
+        # Ensure shipment exists and is pending (only pending shipments can be scheduled)
         shipment = db.execute(
-            "SELECT * FROM shipments WHERE shipment_id = ?", (shipment_id,)
+            "SELECT shipment_id, status FROM shipments WHERE shipment_id = ?",
+            (shipment_id,),
         ).fetchone()
 
         if not shipment:
             return jsonify({"error": "Shipment does not exist"}), 404
 
-        # Cannot schedule if already cancelled or delivered
-        if shipment["status"] not in ("pending", "active"):
-            return jsonify({"error": "This shipment cannot be scheduled"}), 400
+        current_status = (shipment["status"] or "").strip().lower()
+        if current_status != "pending":
+            return jsonify({"error": "Only pending shipments can be scheduled for pickup"}), 400
 
-        # Insert pickup request
-        db.execute(
+        # Update shipments table with pickup details
+        cur = db.execute(
             """
-            INSERT INTO pickup_requests
-            (shipment_id, pickup_date, pickup_time, pickup_location, handoff_details)
-            VALUES (?, ?, ?, ?, ?)
+            UPDATE shipments
+            SET date_to_pickup = ?,
+                pickup_location = ?,
+                details = ?
+            WHERE shipment_id = ?
+              AND status = 'pending'
             """,
-            (shipment_id, pickup_date, pickup_time, pickup_location, handoff_details)
+            (datetime_to_pickup, pickup_location, handoff_details, shipment_id),
         )
+
+        if cur.rowcount == 0:
+            return jsonify({"error": "Pickup scheduling failed"}), 400
+
         db.commit()
 
         return jsonify({"message": "Pickup scheduled successfully"}), 201
@@ -729,6 +740,7 @@ def schedule_pickup():
     except Exception as e:
         app.logger.exception("Error in /api/schedulePickup")
         return jsonify({"error": str(e)}), 500
+
 
 @app.post("/plan-route")
 def plan_route():

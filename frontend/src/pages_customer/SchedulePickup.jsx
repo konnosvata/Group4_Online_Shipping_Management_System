@@ -7,8 +7,25 @@ const getTodayUTC2 = () => {
   return utc2Date.toISOString().split("T")[0];
 };
 
+
+const generateTimeOptions = (stepMinutes = 15) => {
+  const options = [];
+  for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += stepMinutes) {
+      const hh = String(h).padStart(2, "0");
+      const mm = String(m).padStart(2, "0");
+      options.push(`${hh}:${mm}`);
+    }
+  }
+  return options;
+};
+
+
 export default function SchedulePickup() {
   const [shipments, setShipments] = useState([]);
+  const pendingShipments = Array.isArray(shipments)
+    ? shipments.filter((s) => String(s.status || "").toLowerCase() === "pending")
+    : [];
   const [selectedShipmentId, setSelectedShipmentId] = useState("");
   const [pickupDate, setPickupDate] = useState("");
   const [pickupTime, setPickupTime] = useState("");
@@ -23,7 +40,7 @@ export default function SchedulePickup() {
       ? "http://localhost:5000"
       : `http://${window.location.hostname}:5000`;
 
-  // Load active shipments for this customer
+  // Load pending shipments for this customer
   useEffect(() => {
     const fetchActiveShipments = async () => {
       try {
@@ -52,7 +69,7 @@ export default function SchedulePickup() {
           throw new Error(data.error || "Failed to load shipments");
         }
 
-        setShipments(data);
+        setShipments(Array.isArray(data) ? data : []);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -119,20 +136,20 @@ export default function SchedulePickup() {
     <div style={{ padding: "20px" }}>
       <h2>Schedule Pickup</h2>
 
-      {loading && <p>Loading your active shipments...</p>}
+      {loading && <p>Loading your pending shipments...</p>}
       {error && (
         <p style={{ color: "red", whiteSpace: "pre-wrap" }}>{error}</p>
       )}
       {success && <p style={{ color: "green" }}>{success}</p>}
 
-      {!loading && shipments.length === 0 && (
+      {!loading && pendingShipments.length === 0 && (
         <p>
-          You don&apos;t have any active or pending shipments to schedule a pickup
+          You don&apos;t have any pending shipments to schedule a pickup
           for.
         </p>
       )}
 
-      {!loading && shipments.length > 0 && (
+      {!loading && pendingShipments.length > 0 && (
         <form
           onSubmit={handleSubmit}
           style={{ maxWidth: "500px", marginTop: "20px" }}
@@ -147,7 +164,7 @@ export default function SchedulePickup() {
               style={{ width: "100%", padding: "8px", marginTop: "5px" }}
             >
               <option value="">-- Choose a shipment --</option>
-              {shipments.map((s) => (
+              {pendingShipments.map((s) => (
                 <option key={s.shipment_id} value={s.shipment_id}>
                   #{s.shipment_id} – {s.destination} ({s.status})
                 </option>
@@ -172,12 +189,24 @@ export default function SchedulePickup() {
             <label>
               <strong>Pickup Time *</strong>
             </label>
-            <input
-              type="time"
+            <select
               value={pickupTime}
               onChange={(e) => setPickupTime(e.target.value)}
-              style={{ width: "100%", padding: "8px", marginTop: "5px" }}
-            />
+              size={6}
+              style={{
+                width: "100%",
+                padding: "8px",
+                marginTop: "5px",
+                overflowY: "auto",
+              }}
+            >
+              <option value="">-- Choose a time --</option>
+              {generateTimeOptions(15).map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div style={{ marginBottom: "15px" }}>
