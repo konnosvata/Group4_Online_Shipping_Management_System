@@ -398,6 +398,55 @@ def get_all_shipments():
         app.logger.exception("Error in /api/allShipments")
         return jsonify({"error": "Internal server error"}), 500
 
+# -----------------------------
+# COMMUNICATION PAGE ENDPOINT
+# -----------------------------
+@app.get("/api/communication")
+def communication():
+    try:
+        user_id = request.args.get("user_id")
+        if not user_id:
+            return jsonify({"error": "user_id is required"}), 400
+
+        db = get_db()
+
+        shipments = db.execute(
+            """
+            SELECT shipment_id, driver_id 
+            FROM shipments
+            WHERE created_by = ? AND (status = 'active' OR status = 'pending')
+            """,
+            (user_id,)
+        ).fetchall()
+
+        result = []
+
+        for s in shipments:
+            driver = db.execute(
+                """
+                SELECT d.driver_id, d.user_id, d.phone, u.name
+                FROM drivers d
+                JOIN users u ON d.user_id = u.user_id
+                WHERE d.driver_id = ?
+                """,
+                (s["driver_id"],)
+            ).fetchone()
+
+            if driver:
+                result.append({
+                    "driverId": driver["driver_id"],
+                    "name": driver["name"],
+                    "phone": driver["phone"],
+                    "shipmentId": s["shipment_id"]
+                })
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        app.logger.exception("COMMUNICATION ERROR")
+        return jsonify({"error": "Internal server error"}), 500
+
+
 @app.post("/api/updateShipment")
 def update_shipment():
     try:
@@ -870,7 +919,7 @@ def update_shipment_status():
         if not shipment_id or not new_status:
             return jsonify({"error": "shipment_id and status are required"}), 400
 
-        if new_status not in ["pending", "picked up", "delivered"]:
+        if new_status not in ["pending", "active", "completed", "cancelled"]:
             return jsonify({"error": "Invalid status value"}), 400
 
         db = get_db()
@@ -905,6 +954,8 @@ def update_shipment_status():
 
 
 
-#use port 8000 for backend (port 5000 is reserved by Replit for frontend webview)
+
+
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)
+   
