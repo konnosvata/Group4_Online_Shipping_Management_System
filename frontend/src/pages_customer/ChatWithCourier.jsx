@@ -3,20 +3,40 @@ import React, { useEffect, useState } from "react";
 function ChatWithCourier() {
   const [shipments, setShipments] = useState([]);
   const [visiblePhone, setVisiblePhone] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchShipments = async () => {
       const user = JSON.parse(localStorage.getItem("user"));
-      if (!user) return;
+      if (!user) {
+        setError("Not logged in.");
+        setShipments([]);
+        return;
+      }
 
       try {
+        setError("");
         const res = await fetch(
           `http://localhost:5000/api/communication?user_id=${user.id}`
         );
         const data = await res.json();
-        setShipments(data);
+
+        if (!res.ok) {
+          // Backend might return { error: "..." }
+          setError(data?.error || "Failed to load shipments.");
+          setShipments([]);
+          return;
+        }
+
+        // Defensive: ensure we always store an array so shipments.map won't crash
+        setShipments(Array.isArray(data) ? data : []);
+        if (!Array.isArray(data)) {
+          setError("Unexpected response from server.");
+        }
       } catch (err) {
         console.error(err);
+        setError("Network error while loading shipments.");
+        setShipments([]);
       }
     };
 
@@ -31,7 +51,11 @@ function ChatWithCourier() {
     <div style={{ padding: "20px", maxWidth: "900px" }}>
       <h2 style={{ marginBottom: "20px" }}>Communication</h2>
 
-      {shipments.length === 0 && (
+      {error && (
+        <p style={{ color: "crimson", marginTop: 0 }}>{error}</p>
+      )}
+
+      {shipments.length === 0 && !error && (
         <p style={{ color: "#666" }}>No active shipments found.</p>
       )}
 

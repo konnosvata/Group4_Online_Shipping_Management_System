@@ -410,6 +410,13 @@ def communication():
 
         db = get_db()
 
+        # Detect if drivers table has a phone column (avoid SQL errors if schema differs)
+        try:
+            driver_cols = [row["name"] for row in db.execute("PRAGMA table_info(drivers)").fetchall()]
+        except Exception:
+            driver_cols = []
+        has_driver_phone = "phone" in driver_cols
+
         shipments = db.execute(
             """
             SELECT shipment_id, driver_id 
@@ -422,9 +429,12 @@ def communication():
         result = []
 
         for s in shipments:
+            driver_select = (
+                "d.phone AS phone" if has_driver_phone else "NULL AS phone"
+            )
             driver = db.execute(
-                """
-                SELECT d.driver_id, d.user_id, d.phone, u.name
+                f"""
+                SELECT d.driver_id, d.user_id, {driver_select}, u.name
                 FROM drivers d
                 JOIN users u ON d.user_id = u.user_id
                 WHERE d.driver_id = ?
@@ -910,43 +920,81 @@ def monitor_drivers():
 @app.post("/api/updateShipmentStatus")
 def update_shipment_status():
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
 
         shipment_id = data.get("shipment_id")
-        new_status = data.get("status")
+        requested_status = (data.get("status") or "").strip().lower()
 
         # Validation
-        if not shipment_id or not new_status:
+        if not shipment_id or not requested_status:
             return jsonify({"error": "shipment_id and status are required"}), 400
 
-        if new_status not in ["pending", "active", "completed", "cancelled"]:
+        # NOTE: Database CHECK constraint allows only: active, pending, cancelled, delivered
+        allowed_statuses = {"pending", "active", "cancelled", "delivered"}
+        if requested_status not in allowed_statuses:
             return jsonify({"error": "Invalid status value"}), 400
+
+        # Allowed transitions:
+        # - pending -> active (pickup confirmed)
+        # - active  -> delivered (delivery confirmed)
+        allowed_transitions = {
+            "pending": {"active"},
+            "active": {"delivered"},
+        }
 
         db = get_db()
 
-        # Check shipment exists
+        # Check shipment exists and get current status
         shipment = db.execute(
-            "SELECT * FROM shipments WHERE shipment_id = ?",
+            "SELECT shipment_id, status FROM shipments WHERE shipment_id = ?",
             (shipment_id,)
         ).fetchone()
 
         if not shipment:
             return jsonify({"error": "Shipment not found"}), 404
 
+        current_status = (shipment["status"] if isinstance(shipment, dict) or hasattr(shipment, "__getitem__") else None)
+        try:
+            current_status = shipment["status"]
+        except Exception:
+            # Fallback if row isn't subscriptable
+            current_status = shipment[1] if shipment and len(shipment) > 1 else None
+
+        current_status = (current_status or "").strip().lower()
+
+        if requested_status == current_status:
+            return jsonify({
+                "message": "Shipment status unchanged",
+                "shipment_id": shipment_id,
+                "status": current_status
+            }), 200
+
+        # Enforce valid status transitions (except cancellation, which can happen from any non-terminal state)
+        if requested_status == "cancelled":
+            if current_status in {"delivered", "cancelled"}:
+                return jsonify({"error": "Cannot cancel a delivered/cancelled shipment"}), 400
+        else:
+            if requested_status not in allowed_transitions.get(current_status, set()):
+                return jsonify({
+                    "error": "Invalid status transition",
+                    "current_status": current_status,
+                    "requested_status": requested_status
+                }), 400
+
         # Update status
         db.execute(
             "UPDATE shipments SET status = ? WHERE shipment_id = ?",
-            (new_status, shipment_id)
+            (requested_status, shipment_id)
         )
         db.commit()
 
         return jsonify({
             "message": "Shipment status updated successfully",
             "shipment_id": shipment_id,
-            "new_status": new_status
+            "new_status": requested_status
         }), 200
 
-    except Exception as e:
+    except Exception:
         app.logger.exception("Error in /api/updateShipmentStatus")
         return jsonify({"error": "Internal server error"}), 500
 
@@ -958,4 +1006,3 @@ def update_shipment_status():
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
-   

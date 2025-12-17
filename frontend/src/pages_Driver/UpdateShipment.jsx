@@ -56,8 +56,8 @@ function UpdateShipment() {
   const getNextStatus = (currentStatus) => {
     const statusFlow = {
       pending: "active",
-      active: "completed",
-      completed: null,
+      active: "delivered",
+      delivered: null,
       cancelled: null,
     };
     return statusFlow[currentStatus.toLowerCase()] || null;
@@ -67,7 +67,7 @@ function UpdateShipment() {
     const actionText = {
       pending: "Confirm Pickup",
       active: "Confirm Delivery",
-      completed: "Completed",
+      delivered: "Delivered",
       cancelled: "Cancelled",
     };
     return actionText[currentStatus.toLowerCase()] || "Unknown";
@@ -77,7 +77,7 @@ function UpdateShipment() {
     const colors = {
       pending: "#ffc107",
       active: "#17a2b8",
-      completed: "#28a745",
+      delivered: "#28a745",
       cancelled: "#dc3545",
     };
     return colors[status.toLowerCase()] || "#6c757d";
@@ -169,7 +169,7 @@ function UpdateShipment() {
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {shipments.map((ship) => {
                 const isCancelled = ship.status.toLowerCase() === "cancelled";
-                const isCompleted = ship.status.toLowerCase() === "completed";
+                const isDelivered = ship.status.toLowerCase() === "delivered";
                 const isSelected =
                   selectedShipment &&
                   selectedShipment.shipment_id === ship.shipment_id;
@@ -190,7 +190,7 @@ function UpdateShipment() {
                         ? "#e7f3ff"
                         : "#fff",
                       cursor:
-                        isCancelled || isCompleted ? "not-allowed" : "pointer",
+                        isCancelled || isDelivered ? "not-allowed" : "pointer",
                       opacity: isCancelled ? 0.6 : 1,
                       transition: "all 0.2s",
                     }}
@@ -339,8 +339,8 @@ function UpdateShipment() {
                         color: "#6c757d",
                       }}
                     >
-                      {selectedShipment.status.toLowerCase() === "completed"
-                        ? "This shipment has been completed"
+                      {selectedShipment.status.toLowerCase() === "delivered"
+                        ? "This shipment has been delivered"
                         : "No further action available"}
                     </div>
                   )}
