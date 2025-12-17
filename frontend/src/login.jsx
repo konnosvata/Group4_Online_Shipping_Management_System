@@ -14,7 +14,7 @@ function Login() {
     setSuccess("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/login", {
+      const res = await fetch("http://localhost:5001/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -31,7 +31,7 @@ function Login() {
       setSuccess(`Logged in as ${data.user.name}`);
       localStorage.setItem("user", JSON.stringify(data.user));
       if (data.user.role_id === 1) {
-        navigate("/customer/Create-Shipment");
+        navigate("/customer/create-shipment");
       } 
       else if (data.user.role_id === 2) {
         navigate("/driver/assignedShipments");
