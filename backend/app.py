@@ -919,7 +919,7 @@ def update_shipment_status():
         if not shipment_id or not new_status:
             return jsonify({"error": "shipment_id and status are required"}), 400
 
-        if new_status not in ["pending", "picked up", "delivered"]:
+        if new_status not in ["pending", "active", "completed", "cancelled"]:
             return jsonify({"error": "Invalid status value"}), 400
 
         db = get_db()
