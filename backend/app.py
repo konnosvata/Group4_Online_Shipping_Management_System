@@ -398,9 +398,7 @@ def get_all_shipments():
         app.logger.exception("Error in /api/allShipments")
         return jsonify({"error": "Internal server error"}), 500
 
-# -----------------------------
-# COMMUNICATION PAGE ENDPOINT
-# -----------------------------
+
 @app.get("/api/communication")
 def communication():
     try:
@@ -455,6 +453,29 @@ def communication():
     except Exception as e:
         app.logger.exception("COMMUNICATION ERROR")
         return jsonify({"error": "Internal server error"}), 500
+    
+@app.get("/api/shipments")
+def get_shipments():
+    try:
+        db = get_db()
+
+        status = request.args.get("status")  # active | pending | all
+
+        if status:
+            shipments = db.execute(
+                "SELECT * FROM shipments WHERE status = ?",
+                (status,)
+            ).fetchall()
+        else:
+            shipments = db.execute(
+                "SELECT * FROM shipments"
+            ).fetchall()
+
+        return jsonify([dict(s) for s in shipments]), 200
+
+    except Exception as e:
+        app.logger.error(str(e))
+        return jsonify({"error": "Failed to fetch shipments"}), 500
 
 
 @app.post("/api/updateShipment")
